@@ -10,6 +10,7 @@ import AccountCommands
 import ArenaType
 import BigWorld
 import ResMgr
+from PlayerEvents import g_playerEvents
 from chat_shared import SYS_MESSAGE_TYPE
 from gui import SystemMessages
 from gui.Scaleform.daapi.settings.views import VIEW_ALIAS
@@ -69,11 +70,13 @@ class SessionController(object):
             self.server = None
 
         g_messengerEvents.serviceChannel.onChatMessageReceived += self._onChatMessage
+        g_playerEvents.onAccountShowGUI += self._onAccountShowGUI
         self._registerInModsList()
         self._tick()
 
     def stop(self):
         g_messengerEvents.serviceChannel.onChatMessageReceived -= self._onChatMessage
+        g_playerEvents.onAccountShowGUI -= self._onAccountShowGUI
         if self._tickID is not None:
             BigWorld.cancelCallback(self._tickID)
             self._tickID = None
@@ -114,7 +117,7 @@ class SessionController(object):
             return
         cache = getattr(BigWorld.player(), 'battleResultsCache', None)
         if cache is None:
-            self._retry(arenaID, attempt, 'no battleResultsCache')
+            # игрок уже в следующем бою, заберём результаты по возвращении в ангар
             return
         cache.get(arenaID, partial(self._onResults, arenaID, attempt))
 
@@ -138,6 +141,10 @@ class SessionController(object):
             logger.warning('gave up on battle %s: %s', arenaID, reason)
             return
         BigWorld.callback(FETCH_DELAY * attempt, partial(self._fetch, arenaID, attempt + 1))
+
+    def _onAccountShowGUI(self, *_):
+        for arenaID in self._pending:
+            BigWorld.callback(FETCH_DELAY, partial(self._fetch, arenaID, 1))
 
     def _describeVehicle(self, intCD):
         item = self.itemsCache.items.getItemByCD(intCD)
