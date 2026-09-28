@@ -13,8 +13,6 @@ import ResMgr
 from PlayerEvents import g_playerEvents
 from chat_shared import SYS_MESSAGE_TYPE
 from gui import SystemMessages
-from gui.Scaleform.daapi.settings.views import VIEW_ALIAS
-from gui.shared.event_dispatcher import showBrowserOverlayView
 from helpers import dependency, i18n
 from messenger.proto.events import g_messengerEvents
 from skeletons.gui.shared import IItemsCache
@@ -89,7 +87,9 @@ class SessionController(object):
             SystemMessages.pushMessage(u'Итоги сессии: не удалось запустить локальный сервер, '
                                        u'подробности в python.log', type=SystemMessages.SM_TYPE.Error)
             return
-        showBrowserOverlayView(self.server.url, alias=VIEW_ALIAS.BROWSER_OVERLAY)
+        # встроенный браузер клиента пускает только адреса из своего списка (на остальные отдаёт 418),
+        # поэтому панель открывается в обычном браузере
+        BigWorld.openWebBrowser(self.server.url)
 
     def resetSession(self):
         self.session = Session()
