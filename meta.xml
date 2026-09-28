@@ -1,6 +1,6 @@
 <root>
 	<id>godd.session_stats</id>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<name>Session Stats</name>
 	<description>Battle statistics for the current gaming session</description>
 </root>
